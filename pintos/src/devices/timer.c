@@ -25,6 +25,7 @@ static int64_t ticks;
 static unsigned loops_per_tick;
 
 static intr_handler_func timer_interrupt;
+static void wake_sleep_thread(struct thread*, void *);
 static bool too_many_loops (unsigned loops);
 static void busy_wait (int64_t loops);
 static void real_time_sleep (int64_t num, int32_t denom);
@@ -89,11 +90,17 @@ timer_elapsed (int64_t then)
 void
 timer_sleep (int64_t ticks)
 {
-  int64_t start = timer_ticks ();
-
-  ASSERT (intr_get_level () == INTR_ON);
-  while (timer_elapsed (start) < ticks)
-    thread_yield ();
+  if (ticks <= 0)
+    return;
+//  int64_t start = timer_ticks ();
+  enum intr_level old_level = intr_disable ();
+  ASSERT (intr_get_level () == INTR_OFF);
+ // while (timer_elapsed (start) < ticks)
+ //   thread_yield ();
+  intr_disable ();
+  thread_current()->sleep_ticks = ticks;
+  thread_block();
+  intr_set_level (old_level);
 }
 
 /* Sleeps for approximately MS milliseconds.  Interrupts must be
@@ -172,7 +179,20 @@ timer_interrupt (struct intr_frame *args UNUSED)
 {
   ticks++;
   thread_tick ();
+  thread_foreach(wake_sleep_thread, 0);  
 }
+
+/* Wake sleeped thread when sleep_ticks <= 0 */
+static void
+wake_sleep_thread(struct thread *t, void *aux UNUSED) {
+  if (t->status == THREAD_BLOCKED && t->sleep_ticks > 0) {
+    t->sleep_ticks --;
+    if (t->sleep_ticks <= 0) {
+      thread_unblock(t);
+    }
+  }
+}
+
 
 /* Returns true if LOOPS iterations waits for more than one timer
    tick, otherwise false. */

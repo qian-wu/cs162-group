@@ -182,6 +182,7 @@ thread_create (const char *name, int priority,
   /* Initialize thread. */
   init_thread (t, name, priority);
   tid = t->tid = allocate_tid ();
+  t->sleep_ticks = 0;
 
   /* Stack frame for kernel_thread(). */
   kf = alloc_frame (t, sizeof *kf);
@@ -309,6 +310,7 @@ thread_yield (void)
   old_level = intr_disable ();
   if (cur != idle_thread)
     list_push_back (&ready_list, &cur->elem);
+    // printf("push thread with priority : %d\n", cur->priority);
   cur->status = THREAD_READY;
   schedule ();
   intr_set_level (old_level);
@@ -493,6 +495,7 @@ next_thread_to_run (void)
   if (list_empty (&ready_list))
     return idle_thread;
   else
+    // printf ("get next thread priority %d\n", next->priority);
     return list_entry (list_pop_front (&ready_list), struct thread, elem);
 }
 

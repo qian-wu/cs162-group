@@ -222,6 +222,7 @@ void
 intr_yield_on_return (void)
 {
   ASSERT (intr_context ());
+  //printf ("timer interrupt!");
   yield_on_return = true;
 }
 
