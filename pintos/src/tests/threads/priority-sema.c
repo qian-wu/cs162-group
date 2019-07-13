@@ -27,6 +27,10 @@ test_priority_sema (void)
       int priority = PRI_DEFAULT - (i + 3) % 10 - 1;
       char name[16];
       snprintf (name, sizeof name, "priority %d", priority);
+      if (i > 0)
+        printf ("insert priority %d watiers size is %d first priority is %d\n", \
+	    priority, list_size(&sema.waiters),\
+            list_entry (list_front (&sema.waiters), struct thread, elem)->priority);
       thread_create (name, priority, priority_sema_thread, NULL);
     }
 
@@ -41,5 +45,6 @@ static void
 priority_sema_thread (void *aux UNUSED)
 {
   sema_down (&sema);
+  printf ("Wake up!!");
   msg ("Thread %s woke up.", thread_name ());
 }

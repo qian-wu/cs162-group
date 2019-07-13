@@ -179,7 +179,7 @@ timer_interrupt (struct intr_frame *args UNUSED)
 {
   ticks++;
   thread_tick ();
-  thread_foreach(wake_sleep_thread, 0);  
+  thread_foreach(wake_sleep_thread, 0); 
 }
 
 /* Wake sleeped thread when sleep_ticks <= 0 */
